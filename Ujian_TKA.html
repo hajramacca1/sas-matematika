@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBT SAS - Matematika</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- KaTeX untuk Render Rumus Matematika -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            user-select: none; /* Mencegah copy-paste soal */
+        }
+        .katex { font-size: 1.05em; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+    <!-- ==================== MODAL NOTIFIKASI / PESAN ==================== -->
+    <div id="custom-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border-t-4 border-blue-600 transform transition-all">
+            <div class="flex items-center gap-3 mb-3">
+                <div id="modal-icon-container" class="p-2.5 rounded-full bg-blue-100 text-blue-600">
+                    <i id="modal-icon" data-lucide="info" class="w-6 h-6"></i>
+                </div>
+                <h3 id="modal-title" class="text-lg font-bold text-slate-900">Informasi</h3>
+            </div>
+            <p id="modal-message" class="text-slate-600 text-sm leading-relaxed mb-6">Pesan notifikasi.</p>
+            <div id="modal-actions" class="flex justify-end gap-2">
+                <button id="modal-btn-cancel" onclick="closeModal()" class="hidden px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">Batal</button>
+                <button id="modal-btn-confirm" onclick="closeModal()" class="px-5 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition">Mengerti</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL LOGIN ADMIN ==================== -->
+    <div id="admin-auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border-t-4 border-blue-700 transform transition-all">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-2.5 rounded-full bg-blue-100 text-blue-700">
+                    <i data-lucide="lock" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900">Verifikasi Admin</h3>
+                    <p class="text-xs text-slate-500">Masukkan sandi untuk mengakses Panel Admin & Sheet</p>
+                </div>
+            </div>
+            <form onsubmit="verifyAdminPassword(event)" class="space-y-4">
+                <div>
+                    <input type="password" id="admin-password-input" required placeholder="Masukkan kata sandi admin..." autocomplete="off"
+                        class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none transition">
+                    <p id="admin-auth-error" class="hidden text-xs text-rose-600 font-semibold mt-1.5 flex items-center gap-1">
+                        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Kata sandi salah! Akses ditolak.
+                    </p>
+                </div>
+                <div class="flex justify-end gap-2 pt-1">
+                    <button type="button" onclick="closeAdminAuthModal()" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">Batal</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl text-sm font-bold bg-blue-700 text-white hover:bg-blue-800 shadow-sm transition">Masuk Admin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== HEADER GLOBAL ==================== -->
+    <header class="bg-blue-700 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div id="header-logo" class="w-10 h-10 bg-white text-blue-700 rounded-xl flex items-center justify-center font-extrabold text-xl shadow-inner">
+                    SAS
+                </div>
+                <div>
+                    <h1 id="header-school-name" class="font-bold text-base sm:text-lg leading-tight tracking-tight">UPTD SMP NEGERI 13 SINJAI</h1>
+                    <p id="header-exam-title" class="text-xs text-blue-200 font-medium">Sumatif Akhir Semester (SAS) - Matematika</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 sm:gap-3">
+                <span id="sync-badge" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-800/80 text-blue-100 border border-blue-600">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Sheet Terhubung
+                </span>
+                <button onclick="openAdminAuthModal()" id="btn-nav-admin" class="flex items-center gap-1.5 bg-blue-800 hover:bg-blue-900 text-white px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition border border-blue-600">
+                    <i data-lucide="lock" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Admin & Sheet</span>
+                </button>
+                <button onclick="switchView('login')" id="btn-nav-login" class="hidden flex items-center gap-1.5 bg-white text-blue-700 hover:bg-blue-50 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition shadow-sm">
+                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                    <span>Halaman Ujian</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== VIEW 1: HALAMAN LOGIN MURID ==================== -->
+    <main id="view-login" class="flex-1 flex items-center justify-center p-4 sm:p-6">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-100 max-w-md w-full overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-700 to-blue-600 p-6 sm:p-8 text-white text-center relative overflow-hidden">
+                <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+                <div class="absolute -left-6 -bottom-6 w-28 h-28 bg-blue-400/20 rounded-full blur-xl"></div>
+                <div class="w-16 h-16 bg-white/15 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/25 shadow-lg">
+                    <i data-lucide="graduation-cap" class="w-9 h-9 text-white"></i>
+                </div>
+                <h2 class="text-2xl font-extrabold tracking-tight">LOGIN PESERTA SAS</h2>
+                <p id="login-school-subtitle" class="text-blue-100 text-sm mt-1">Tahun Pelajaran 2026/2027</p>
+            </div>
+
+            <form id="login-form" onsubmit="handleLogin(event)" class="p-6 sm:p-8 space-y-5">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Nama Lengkap Murid</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <i data-lucide="user" class="w-5 h-5"></i>
+                        </div>
+                        <input type="text" id="input-nama" required placeholder="Ketik nama lengkap Anda..." 
+                            class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none transition">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Token Soal</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <i data-lucide="key-round" class="w-5 h-5"></i>
+                        </div>
+                        <input type="text" id="input-token" required placeholder="Masukkan token ujian..." autocomplete="off"
+                            class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold uppercase tracking-widest focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none transition">
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1.5 flex items-center gap-1">
+                        <i data-lucide="info" class="w-3.5 h-3.5"></i> Token default saat ini: <strong id="hint-token" class="text-blue-600">MATH2026</strong>
+                    </p>
+                </div>
+
+                <div class="bg-blue-50/80 border border-blue-100 rounded-xl p-3.5 text-xs text-blue-800 space-y-1">
+                    <p class="font-bold flex items-center gap-1.5"><i data-lucide="shield-alert" class="w-4 h-4 text-blue-600"></i> Tata Tertib Ujian:</p>
+                    <ul class="list-disc list-inside text-blue-700/90 space-y-0.5 pl-1">
+                        <li>Dilarang berpindah tab atau membuka aplikasi lain.</li>
+                        <li>Setiap perpindahan tab tercatat otomatis sebagai pelanggaran.</li>
+                        <li>Nilai dan pelanggaran langsung terkirim ke Google Sheet pengawas.</li>
+                    </ul>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-2 text-sm">
+                    <span>MULAI MENGERJAKAN</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <!-- ==================== VIEW 2: HALAMAN UJIAN (CBT) ==================== -->
+    <main id="view-exam" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Info Bar Peserta & Timer -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80 mb-6 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 font-bold flex items-center justify-center">
+                    <i data-lucide="user-check" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-400 font-medium">Peserta Ujian</p>
+                    <p id="exam-student-name" class="font-bold text-slate-800 text-sm sm:text-base">Nama Murid</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 sm:gap-6">
+                <!-- Indikator Pelanggaran -->
+                <div class="flex items-center gap-2 bg-rose-50 border border-rose-200 px-3.5 py-2 rounded-xl">
+                    <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600"></i>
+                    <div>
+                        <p class="text-[10px] font-bold uppercase text-rose-500 leading-none">Pelanggaran</p>
+                        <p class="text-sm font-extrabold text-rose-700 leading-tight"><span id="violation-count">0</span> Kali</p>
+                    </div>
+                </div>
+
+                <!-- Timer -->
+                <div class="flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-xl">
+                    <i data-lucide="clock" class="w-4 h-4 text-blue-600"></i>
+                    <div>
+                        <p class="text-[10px] font-bold uppercase text-blue-500 leading-none">Sisa Waktu</p>
+                        <p id="exam-timer" class="text-sm sm:text-base font-extrabold text-blue-800 font-mono leading-tight">90:00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid Utama: Area Soal & Navigasi Nomor -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <!-- Kolom Kiri: Stimulus & Pertanyaan (8 Kolom) -->
+            <div class="lg:col-span-8 bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+                <!-- Header Nomor Soal -->
+                <div class="bg-slate-50 border-b border-slate-200/80 px-6 py-4 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <span class="bg-blue-600 text-white font-bold text-sm px-3 py-1 rounded-lg">Soal No. <span id="q-number">1</span></span>
+                        <span id="q-type-badge" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700">Pilihan Ganda</span>
+                    </div>
+                    <span id="q-topic" class="text-xs font-medium text-slate-500 hidden sm:inline">Bilangan Berpangkat</span>
+                </div>
+
+                <!-- Isi Stimulus & Soal -->
+                <div class="p-6 space-y-6">
+                    <!-- Kotak Stimulus -->
+                    <div class="bg-blue-50/60 border border-blue-200/80 rounded-xl p-5 space-y-4">
+                        <div class="flex items-center gap-2 text-blue-800 font-bold text-sm border-b border-blue-200/60 pb-2">
+                            <i data-lucide="book-open" class="w-4 h-4 text-blue-600"></i>
+                            <span id="stimulus-title">Stimulus 1</span>
+                        </div>
+                        <div id="stimulus-visual" class="flex justify-center bg-white p-3 rounded-lg border border-blue-100">
+                            <!-- Ilustrasi SVG dirender di sini -->
+                        </div>
+                        <p id="stimulus-text" class="text-sm text-slate-700 leading-relaxed text-justify"></p>
+                    </div>
+
+                    <!-- Pertanyaan -->
+                    <div>
+                        <p id="question-text" class="text-base font-semibold text-slate-900 leading-relaxed mb-4"></p>
+                        
+                        <!-- Kontainer Opsi Jawaban -->
+                        <div id="options-container" class="space-y-3">
+                            <!-- Opsi dirender secara dinamis -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Navigasi Prev / Next -->
+                <div class="bg-slate-50 border-t border-slate-200/80 px-6 py-4 flex items-center justify-between">
+                    <button onclick="prevQuestion()" id="btn-prev" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition">
+                        <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                        <span>Sebelumnya</span>
+                    </button>
+
+                    <button onclick="toggleRagu()" id="btn-ragu" class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300 transition">
+                        <i data-lucide="flag" class="w-4 h-4"></i>
+                        <span>Ragu-ragu</span>
+                    </button>
+
+                    <button onclick="nextQuestion()" id="btn-next" class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition">
+                        <span>Selanjutnya</span>
+                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Kolom Kanan: Peta Nomor Soal (4 Kolom) -->
+            <div class="lg:col-span-4 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 sticky top-22">
+                <h3 class="font-bold text-slate-800 text-sm mb-3 flex items-center justify-between">
+                    <span>Daftar Nomor Soal</span>
+                    <span class="text-xs font-normal text-slate-500"><span id="answered-count">0</span>/30 Dijawab</span>
+                </h3>
+                
+                <!-- Grid 30 Tombol -->
+                <div id="question-grid" class="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-5 gap-2 mb-5">
+                    <!-- Nomor dirender JS -->
+                </div>
+
+                <!-- Legenda Warna -->
+                <div class="grid grid-cols-2 gap-2 text-xs text-slate-600 border-t border-slate-100 pt-4 mb-5">
+                    <div class="flex items-center gap-2"><span class="w-3.5 h-3.5 rounded bg-blue-600 inline-block"></span> Sudah Dijawab</div>
+                    <div class="flex items-center gap-2"><span class="w-3.5 h-3.5 rounded bg-amber-400 inline-block"></span> Ragu-ragu</div>
+                    <div class="flex items-center gap-2"><span class="w-3.5 h-3.5 rounded border-2 border-blue-600 bg-white inline-block"></span> Sedang Dibuka</div>
+                    <div class="flex items-center gap-2"><span class="w-3.5 h-3.5 rounded bg-slate-100 border border-slate-300 inline-block"></span> Belum Dijawab</div>
+                </div>
+
+                <button onclick="confirmFinishExam()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-2 text-sm">
+                    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                    <span>SELESAI & KIRIM JAWABAN</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- ==================== VIEW 3: HASIL UJIAN MURID ==================== -->
+    <main id="view-result" class="hidden flex-1 flex items-center justify-center p-4 sm:p-6">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-100 max-w-lg w-full overflow-hidden text-center">
+            <div class="bg-blue-700 p-8 text-white">
+                <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i data-lucide="award" class="w-9 h-9 text-white"></i>
+                </div>
+                <h2 class="text-2xl font-extrabold">UJIAN TELAH SELESAI</h2>
+                <p id="res-school-name" class="text-blue-200 text-sm mt-1">UPTD SMP NEGERI 13 SINJAI</p>
+            </div>
+            <div class="p-6 sm:p-8 space-y-6">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Nama Peserta</p>
+                    <p id="res-student-name" class="text-xl font-bold text-slate-800 mt-0.5">-</p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-blue-50 border border-blue-100 p-4 rounded-2xl">
+                        <p class="text-xs font-semibold text-blue-600">Nilai Akhir</p>
+                        <p id="res-score" class="text-3xl font-extrabold text-blue-800 mt-1">0</p>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl">
+                        <p class="text-xs font-semibold text-emerald-600">Benar</p>
+                        <p id="res-correct" class="text-3xl font-extrabold text-emerald-700 mt-1">0<span class="text-sm font-normal">/30</span></p>
+                    </div>
+                    <div class="bg-rose-50 border border-rose-100 p-4 rounded-2xl">
+                        <p class="text-xs font-semibold text-rose-600">Pelanggaran</p>
+                        <p id="res-violations" class="text-3xl font-extrabold text-rose-700 mt-1">0</p>
+                    </div>
+                </div>
+
+                <div id="res-sync-status" class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-600 flex items-center justify-center gap-2">
+                    <i data-lucide="cloud-check" class="w-4 h-4 text-emerald-600"></i>
+                    <span>Data nilai & riwayat pelanggaran telah tersimpan ke sistem & Google Sheet.</span>
+                </div>
+
+                <button onclick="logoutToLogin()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3.5 rounded-xl transition text-sm">
+                    KEMBALI KE HALAMAN LOGIN
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- ==================== VIEW 4: PANEL ADMIN, PROFIL SEKOLAH & GOOGLE SHEET ==================== -->
+    <main id="view-admin" class="hidden flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        
+        <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80">
+            <div>
+                <h2 class="text-xl font-extrabold text-slate-900">Panel Pengawas & Pengaturan Sekolah</h2>
+                <p class="text-sm text-slate-500">Kelola identitas sekolah, token ujian, pantau nilai & pelanggaran murid secara real-time.</p>
+            </div>
+            <button onclick="switchView('login')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm transition">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>Kembali ke Login Ujian</span>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Pengaturan Profil Sekolah & Token (5 Kolom) -->
+            <div class="lg:col-span-5 space-y-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6">
+                    <h3 class="font-bold text-slate-800 text-base mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
+                        <i data-lucide="school" class="w-5 h-5 text-blue-600"></i>
+                        <span>Edit Profil Sekolah & Token</span>
+                    </h3>
+                    <form onsubmit="saveSchoolSettings(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Nama Sekolah</label>
+                            <input type="text" id="set-school-name" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-blue-600 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Judul / Sub-judul Ujian</label>
+                            <input type="text" id="set-exam-title" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-blue-600 outline-none">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">Token Soal Aktif</label>
+                                <input type="text" id="set-token" required class="w-full px-3.5 py-2.5 bg-blue-50 border border-blue-200 text-blue-800 rounded-xl text-sm font-extrabold uppercase tracking-wider focus:bg-white focus:border-blue-600 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">Durasi (Menit)</label>
+                                <input type="number" id="set-duration" min="5" max="180" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-blue-600 outline-none">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">URL Webhook Google Apps Script (Real-Time Sheet)</label>
+                            <input type="url" id="set-webhook-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:bg-white focus:border-blue-600 outline-none">
+                            <p class="text-[11px] text-slate-400 mt-1">Tempel URL Web App Google Script Anda di sini. Untuk penggunaan banyak perangkat, masukkan juga URL ini ke variabel <b>DEFAULT_WEBHOOK_URL</b> di dalam kode sebelum dibagikan.</p>
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-2">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            <span>SIMPAN PENGATURAN</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Panduan Kode Google Apps Script -->
+                <div class="bg-slate-800 text-slate-200 rounded-2xl p-5 text-xs space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-white flex items-center gap-1.5"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i> Kode Google Apps Script</span>
+                        <button onclick="copyAppsScript()" class="bg-slate-700 hover:bg-slate-600 text-white px-2.5 py-1 rounded-lg text-[11px] font-semibold transition">Salin Kode</button>
+                    </div>
+                    <p class="text-slate-400 leading-relaxed">Buat Google Sheet baru &rarr; <b>Ekstensi</b> &rarr; <b>Apps Script</b> &rarr; tempel kode ini &rarr; <b>Terapkan (Deploy) sebagai Aplikasi Web</b> (Akses: <i>Siapa saja / Anyone</i>):</p>
+                    <pre id="apps-script-code" class="bg-slate-900 p-3 rounded-xl overflow-x-auto text-[11px] text-emerald-300 font-mono leading-relaxed">function doGet(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var rows = sheet.getDataRange().getValues();
+  var result = [];
+  for (var i = 1; i &lt; rows.length; i++) {
+    result.push({
+      waktu: rows[i][0] ? Utilities.formatDate(new Date(rows[i][0]), "GMT+8", "dd/MM/yyyy HH:mm:ss") : "-",
+      nama: rows[i][1],
+      token: rows[i][2],
+      skor: rows[i][3],
+      benar: rows[i][4],
+      pelanggaran: rows[i][5],
+      logPelanggaran: rows[i][6],
+      status: rows[i][7]
+    });
+  }
+  return ContentService.createTextOutput(JSON.stringify(result.reverse()))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  var lock = LockService.getScriptLock();
+  lock.tryLock(10000);
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data = (e &amp;&amp; e.postData &amp;&amp; e.postData.contents) ? JSON.parse(e.postData.contents) : {
+      nama: "Tes Manual Editor", token: "MATH2026", skor: 100, 
+      benar: 30, pelanggaran: 0, logPelanggaran: "Tes Run Berhasil", status: "Simulasi"
+    };
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(["Waktu", "Nama Murid", "Token", "Skor", "Benar", "Pelanggaran", "Detail Pelanggaran", "Status"]);
+    }
+    sheet.appendRow([
+      new Date(), data.nama, data.token, data.skor, 
+      data.benar, data.pelanggaran, data.logPelanggaran, data.status
+    ]);
+    return ContentService.createTextOutput(JSON.stringify({"result":"success"}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
+  }
+}</pre>
+                </div>
+            </div>
+
+            <!-- Tabel Monitoring Real-Time Nilai & Pelanggaran (7 Kolom) -->
+            <div class="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 flex flex-col">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-slate-100 pb-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                            <i data-lucide="activity" class="w-5 h-5 text-emerald-600"></i>
+                            <span>Monitoring Live Nilai & Pelanggaran</span>
+                        </h3>
+                        <p class="text-xs text-slate-500">Data diperbarui otomatis & dapat ditarik langsung dari Google Sheet.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="fetchFromSheet()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            <span>Tarik Data Sheet</span>
+                        </button>
+                        <button onclick="exportCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            <span>Unduh CSV</span>
+                        </button>
+                        <button onclick="clearRecords()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-2 rounded-xl text-xs font-bold transition">
+                            Reset Lokal
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto flex-1">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500 bg-slate-50">
+                                <th class="py-3 px-3 rounded-tl-lg">Waktu</th>
+                                <th class="py-3 px-3">Nama Murid</th>
+                                <th class="py-3 px-3 text-center">Skor</th>
+                                <th class="py-3 px-3 text-center">Pelanggaran</th>
+                                <th class="py-3 px-3 rounded-tr-lg">Catatan / Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="live-table-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- Data dirender JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ==================== SCRIPT APLIKASI & BANK 30 SOAL ==================== -->
+    <script>
+        // --- 1. KONFIGURASI & STATE APLIKASI (MULTI-PERANGKAT) ---
+        // WAJIB DIISI: Tempel URL Web App Google Apps Script Anda di dalam tanda kutip di bawah ini sebelum dibagikan ke perangkat murid!
+        const DEFAULT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzpJgnPgVQibln5UlA3ZkRNObE3nJZSgOLU0USE3DvVD8psUp6QM95yeuVT_df6UjCM/exec";
+        const ADMIN_PASSWORD = "hajra03";
+        let isAdminAuthenticated = false;
+
+        let appConfig = {
+            schoolName: "UPTD SMP NEGERI 13 SINJAI",
+            examTitle: "Sumatif Akhir Semester (SAS) - Matematika",
+            token: "MATH2026",
+            duration: 90,
+            webhookUrl: DEFAULT_WEBHOOK_URL
+        };
+
+        let studentState = {
+            name: "",
+            token: "",
+            answers: Array(30).fill(null),
+            ragu: Array(30).fill(false),
+            currentIdx: 0,
+            violations: 0,
+            violationLogs: [],
+            timeLeft: 90 * 60,
+            timerInterval: null,
+            isExamActive: false
+        };
+
+        let examRecords = [];
+
+        // --- 2. BANK 15 STIMULUS DENGAN ILUSTRASI SVG ---
+        const stimuli = {
+            1: {
+                title: "Stimulus 1: Pembelahan Sel Amoeba",
+                topic: "Bilangan Berpangkat",
+                text: "Amoeba proteus adalah organisme uniseluler mikroskopis yang berkembang biak dengan cara membelah diri (pembelahan biner). Pada kondisi laboratorium yang ideal, seekor Amoeba dapat membelah diri menjadi dua bagian yang sama besar setiap 20 menit sekali. Seorang siswa kelas IX, Budi, sedang melakukan pengamatan biologi dengan meletakkan 1 ekor Amoeba di dalam cawan petri pada pukul 08.00 pagi.",
+                svg: `<svg width="280" height="90" viewBox="0 0 280 90"><rect width="280" height="90" rx="8" fill="#eff6ff"/><circle cx="45" cy="45" r="18" fill="#3b82f6" opacity="0.85"/><circle cx="45" cy="45" r="5" fill="#1d4ed8"/><text x="45" y="78" font-size="10" text-anchor="middle" fill="#1e3a8a" font-weight="bold">08.00 (1 Sel)</text><path d="M75 45 L105 45" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow)"/><circle cx="135" cy="30" r="13" fill="#3b82f6" opacity="0.85"/><circle cx="135" cy="60" r="13" fill="#3b82f6" opacity="0.85"/><text x="135" y="83" font-size="10" text-anchor="middle" fill="#1e3a8a" font-weight="bold">08.20 (2 Sel)</text><path d="M165 45 L195 45" stroke="#2563eb" stroke-width="2"/><circle cx="225" cy="22" r="10" fill="#60a5fa"/><circle cx="250" cy="22" r="10" fill="#60a5fa"/><circle cx="225" cy="52" r="10" fill="#60a5fa"/><circle cx="250" cy="52" r="10" fill="#60a5fa"/><text x="237" y="78" font-size="10" text-anchor="middle" fill="#1e3a8a" font-weight="bold">08.40 (4 Sel)</text></svg>`
+            },
+            2: {
+                title: "Stimulus 2: Kapasitas Penyimpanan Digital",
+                topic: "Operasi Bilangan Berpangkat",
+                text: "Dalam dunia komputasi, kapasitas penyimpanan memori menggunakan sistem bilangan berbasis 2. Konversi satuannya adalah: 1 Kilobyte (KB) = $2^{10}$ Byte, 1 Megabyte (MB) = $2^{20}$ Byte, 1 Gigabyte (GB) = $2^{30}$ Byte, dan 1 Terabyte (TB) = $2^{40}$ Byte. Siti membeli sebuah flashdisk berkapasitas 16 GB untuk menyimpan file tugas sekolah dan foto pribadinya.",
+                svg: `<svg width="300" height="85" viewBox="0 0 300 85"><rect x="10" y="15" width="60" height="45" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/><text x="40" y="35" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e40af">1 KB</text><text x="40" y="50" font-size="9" text-anchor="middle" fill="#3b82f6">2¹⁰ Byte</text><rect x="83" y="15" width="60" height="45" rx="6" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.5"/><text x="113" y="35" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e40af">1 MB</text><text x="113" y="50" font-size="9" text-anchor="middle" fill="#1d4ed8">2²⁰ Byte</text><rect x="156" y="15" width="60" height="45" rx="6" fill="#93c5fd" stroke="#1d4ed8" stroke-width="1.5"/><text x="186" y="35" font-size="11" font-weight="bold" text-anchor="middle" fill="#1e3a8a">1 GB</text><text x="186" y="50" font-size="9" text-anchor="middle" fill="#1e3a8a">2³⁰ Byte</text><rect x="229" y="15" width="60" height="45" rx="6" fill="#3b82f6" stroke="#1e40af" stroke-width="1.5"/><text x="259" y="35" font-size="11" font-weight="bold" text-anchor="middle" fill="#ffffff">1 TB</text><text x="259" y="50" font-size="9" text-anchor="middle" fill="#eff6ff">2⁴⁰ Byte</text><text x="150" y="76" font-size="10" text-anchor="middle" fill="#475569">Skala Kapasitas Memori Digital (Basis 2)</text></svg>`
+            },
+            3: {
+                title: "Stimulus 3: Jarak Planet di Tata Surya",
+                topic: "Notasi Ilmiah (Bentuk Baku)",
+                text: "Buku teks astronomi menyajikan data jarak rata-rata planet dari Matahari: jarak Bumi ke Matahari sekitar 150.000.000 km (1 Satuan Astronomi), jarak Jupiter ke Matahari sekitar 778.000.000 km, dan jarak Neptunus ke Matahari mencapai sekitar 4.500.000.000 km.",
+                svg: `<svg width="300" height="85" viewBox="0 0 300 85"><rect width="300" height="85" rx="8" fill="#0f172a"/><circle cx="25" cy="42" r="18" fill="#facc15"/><text x="25" y="73" font-size="9" fill="#fde047" text-anchor="middle">Matahari</text><circle cx="95" cy="42" r="7" fill="#38bdf8"/><text x="95" y="25" font-size="9" fill="#e0f2fe" text-anchor="middle">Bumi</text><text x="95" y="65" font-size="8" fill="#94a3b8" text-anchor="middle">150 jt km</text><circle cx="175" cy="42" r="13" fill="#fb923c"/><text x="175" y="22" font-size="9" fill="#ffedd5" text-anchor="middle">Jupiter</text><text x="175" y="68" font-size="8" fill="#94a3b8" text-anchor="middle">778 jt km</text><circle cx="260" cy="42" r="9" fill="#6366f1"/><text x="260" y="24" font-size="9" fill="#e0e7ff" text-anchor="middle">Neptunus</text><text x="260" y="65" font-size="8" fill="#94a3b8" text-anchor="middle">4,5 M km</text></svg>`
+            },
+            4: {
+                title: "Stimulus 4: Ukuran Sel & Virus Mikroskopis",
+                topic: "Notasi Ilmiah Bilangan Kecil",
+                text: "Mikroskop elektron memungkinkan ilmuwan mengukur partikel mikroskopis secara presisi. Diameter rata-rata sel darah merah manusia adalah sekitar $8 \\times 10^{-6}$ meter, sedangkan partikel virus influenza memiliki diameter sekitar $1,2 \\times 10^{-7}$ meter.",
+                svg: `<svg width="280" height="85" viewBox="0 0 280 85"><circle cx="80" cy="42" r="28" fill="#fecdd3" stroke="#e11d48" stroke-width="3"/><circle cx="80" cy="42" r="14" fill="#fda4af"/><text x="80" y="80" font-size="9" text-anchor="middle" fill="#881337" font-weight="bold">Sel Darah (8 × 10⁻⁶ m)</text><circle cx="205" cy="42" r="8" fill="#8b5cf6"/><line x1="205" y1="30" x2="205" y2="54" stroke="#6d28d9" stroke-width="2"/><line x1="193" y1="42" x2="217" y2="42" stroke="#6d28d9" stroke-width="2"/><text x="205" y="80" font-size="9" text-anchor="middle" fill="#4c1d95" font-weight="bold">Virus (1,2 × 10⁻⁷ m)</text></svg>`
+            },
+            5: {
+                title: "Stimulus 5: Pertumbuhan Koloni Lebah",
+                topic: "Pola Bilangan Berpangkat",
+                text: "Dalam simulasi ekosistem, populasi lebah diatur menggunakan perkalian berulang. Dimulai dari 1 ekor lebah ratu pada Generasi 0 ($3^0$), yang menetaskan 3 lebah calon ratu baru pada Generasi 1. Selanjutnya, setiap 1 lebah dari generasi sebelumnya menetaskan 3 lebah baru pada generasi berikutnya tanpa ada yang mati.",
+                svg: `<svg width="280" height="90" viewBox="0 0 280 90"><circle cx="140" cy="16" r="8" fill="#f59e0b"/><text x="175" y="19" font-size="9" fill="#92400e" font-weight="bold">Gen 0: 1 (3⁰)</text><line x1="140" y1="24" x2="70" y2="45" stroke="#d97706"/><line x1="140" y1="24" x2="140" y2="45" stroke="#d97706"/><line x1="140" y1="24" x2="210" y2="45" stroke="#d97706"/><circle cx="70" cy="48" r="7" fill="#fbbf24"/><circle cx="140" cy="48" r="7" fill="#fbbf24"/><circle cx="210" cy="48" r="7" fill="#fbbf24"/><text x="250" y="51" font-size="9" fill="#92400e" font-weight="bold">Gen 1: 3¹</text><text x="140" y="80" font-size="10" text-anchor="middle" fill="#78350f" font-weight="bold">Gen 2: 9 (3²) → Gen 3: 27 (3³) → dst.</text></svg>`
+            },
+            6: {
+                title: "Stimulus 6: Desain Motif Ubin Keramik",
+                topic: "Kekongruenan Bangun Datar",
+                text: "Sebuah ubin lantai berbentuk persegi panjang berukuran 40 cm × 30 cm dibagi menjadi 4 bagian segitiga menggunakan kedua garis diagonalnya yang berpotongan di tengah. Dua segitiga yang saling berhadapan diberi warna biru dan dipastikan kongruen.",
+                svg: `<svg width="220" height="120" viewBox="0 0 220 120"><rect x="30" y="15" width="160" height="90" fill="#ffffff" stroke="#1e40af" stroke-width="2"/><polygon points="30,15 190,15 110,60" fill="#3b82f6" opacity="0.8"/><polygon points="30,105 190,105 110,60" fill="#3b82f6" opacity="0.8"/><line x1="30" y1="15" x2="190" y2="105" stroke="#1e3a8a" stroke-width="1.5"/><line x1="190" y1="15" x2="30" y2="105" stroke="#1e3a8a" stroke-width="1.5"/><text x="110" y="11" font-size="10" text-anchor="middle" fill="#1e3a8a" font-weight="bold">40 cm</text><text x="15" y="64" font-size="10" text-anchor="middle" fill="#1e3a8a" font-weight="bold">30 cm</text></svg>`
+            },
+            7: {
+                title: "Stimulus 7: Maket Arsitektur Gedung",
+                topic: "Kesebangunan Bangun Datar",
+                text: "Seorang arsitek membuat maket (miniatur) sebuah gedung bertingkat dengan skala 1 : 150 agar sebangun dengan gedung aslinya. Pada maket tersebut, tinggi gedung diukur 40 cm dan lebar bagian depannya 20 cm.",
+                svg: `<svg width="240" height="110" viewBox="0 0 240 110"><rect x="35" y="45" width="30" height="55" fill="#93c5fd" stroke="#1d4ed8" stroke-width="1.5"/><text x="50" y="38" font-size="9" text-anchor="middle" fill="#1e40af" font-weight="bold">Maket (40 cm)</text><rect x="130" y="12" width="55" height="88" fill="#2563eb" stroke="#1e3a8a" stroke-width="1.5"/><text x="157" y="108" font-size="9" text-anchor="middle" fill="#1e3a8a" font-weight="bold">Gedung Asli (Skala 1:150)</text><path d="M75 70 L115 70" stroke="#64748b" stroke-dasharray="3,3" stroke-width="1.5"/></svg>`
+            },
+            8: {
+                title: "Stimulus 8: Menaksir Lebar Sungai",
+                topic: "Kesebangunan Segitiga",
+                text: "Anggota pramuka menaksir lebar sungai (AB) dengan memancang tongkat. Titik A adalah pohon di seberang sungai. Dari titik B (tepi sungai lurus dengan A), mereka berjalan ke C sejauh 8 m, lalu ke D sejauh 2 m. Dari D mereka berjalan tegak lurus menjauhi sungai sejauh 3 m ke titik E sehingga E, C, dan A segaris.",
+                svg: `<svg width="260" height="115" viewBox="0 0 260 115"><rect x="10" y="10" width="240" height="35" fill="#bae6fd"/><text x="130" y="30" font-size="10" fill="#0369a1" text-anchor="middle" font-weight="bold">SUNGAI</text><circle cx="60" cy="12" r="6" fill="#16a34a"/><text x="48" y="15" font-size="10" font-weight="bold" fill="#14532d">A</text><line x1="60" y1="12" x2="60" y2="55" stroke="#dc2626" stroke-width="2" stroke-dasharray="3,2"/><line x1="60" y1="55" x2="180" y2="55" stroke="#1e293b" stroke-width="2"/><line x1="180" y1="55" x2="180" y2="95" stroke="#2563eb" stroke-width="2"/><line x1="60" y1="12" x2="180" y2="95" stroke="#475569" stroke-width="1.5"/><text x="50" y="65" font-size="9" font-weight="bold">B</text><text x="105" y="67" font-size="9" fill="#1e40af">8 m</text><text x="145" y="50" font-size="9" font-weight="bold">C</text><text x="165" y="67" font-size="9" fill="#1e40af">2 m</text><text x="187" y="58" font-size="9" font-weight="bold">D</text><text x="195" y="80" font-size="9" fill="#2563eb">3 m</text><text x="187" y="102" font-size="9" font-weight="bold">E</text></svg>`
+            },
+            9: {
+                title: "Stimulus 9: Mengukur Tiang Bendera dengan Cermin",
+                topic: "Aplikasi Kesebangunan",
+                text: "Budi yang tinggi matanya dari tanah adalah 150 cm berdiri 2 meter di depan sebuah cermin datar kecil di tanah. Jarak dari cermin ke dasar tiang bendera adalah 8 meter. Budi melihat puncak tiang bendera tepat di tengah cermin (sudut datang = sudut pantul).",
+                svg: `<svg width="260" height="105" viewBox="0 0 260 105"><line x1="20" y1="90" x2="240" y2="90" stroke="#334155" stroke-width="2"/><line x1="50" y1="50" x2="50" y2="90" stroke="#2563eb" stroke-width="3"/><circle cx="50" cy="45" r="5" fill="#2563eb"/><text x="35" y="72" font-size="9" fill="#1e40af">150cm</text><rect x="92" y="87" width="16" height="4" fill="#0ea5e9"/><text x="100" y="101" font-size="8" text-anchor="middle">Cermin</text><line x1="210" y1="15" x2="210" y2="90" stroke="#dc2626" stroke-width="3"/><line x1="50" y1="45" x2="100" y2="88" stroke="#64748b" stroke-dasharray="3,2"/><line x1="100" y1="88" x2="210" y2="15" stroke="#64748b" stroke-dasharray="3,2"/><text x="75" y="85" font-size="8">2m</text><text x="155" y="85" font-size="8">8m</text></svg>`
+            },
+            10: {
+                title: "Stimulus 10: Rangka Baja Jembatan",
+                topic: "Kekongruenan Segitiga",
+                text: "Desain rangka baja samping sebuah jembatan sepanjang 60 meter tersusun dari segitiga-segitiga sama sisi yang seluruhnya kongruen. Pada bagian alas jembatan, terdapat tepat 10 sisi bawah dari segitiga-segitiga tersebut yang berjejer rapat dari ujung ke ujung.",
+                svg: `<svg width="280" height="80" viewBox="0 0 280 80"><line x1="15" y1="60" x2="265" y2="60" stroke="#1e3a8a" stroke-width="3"/><polyline points="15,60 40,20 65,60 90,20 115,60 140,20 165,60 190,20 215,60 240,20 265,60" fill="none" stroke="#2563eb" stroke-width="2"/><line x1="40" y1="20" x2="240" y2="20" stroke="#3b82f6" stroke-width="2"/><text x="140" y="74" font-size="10" text-anchor="middle" fill="#1e3a8a" font-weight="bold">Total Panjang Alas Jembatan = 60 m (10 Segitiga Sama Sisi)</text></svg>`
+            },
+            11: {
+                title: "Stimulus 11: Produksi Kaleng Susu Silinder",
+                topic: "Luas & Volume Tabung",
+                text: "Sebuah pabrik memproduksi kaleng susu berbentuk tabung dengan jari-jari alas 7 cm dan tinggi 15 cm. Kertas label melingkar direkaSASn menutupi seluruh luas selimut tabung tanpa menutupi bagian alas dan tutupnya. (Gunakan $\\pi = 22/7$).",
+                svg: `<svg width="200" height="105" viewBox="0 0 200 105"><ellipse cx="100" cy="22" rx="35" ry="10" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="1.5"/><path d="M65 22 L65 82 A35 10 0 0 0 135 82 L135 22" fill="#60a5fa" opacity="0.6" stroke="#1d4ed8" stroke-width="1.5"/><line x1="100" y1="22" x2="135" y2="22" stroke="#1e3a8a" stroke-width="1.5"/><text x="117" y="18" font-size="9" font-weight="bold" fill="#1e3a8a">r=7</text><text x="152" y="55" font-size="9" font-weight="bold" fill="#1e3a8a">t=15 cm</text></svg>`
+            },
+            12: {
+                title: "Stimulus 12: Kerajinan Caping Petani",
+                topic: "Luas & Volume Kerucut",
+                text: "Pak Parjo membuat caping (topi petani berbentuk kerucut tanpa alas) dari anyaman bambu dengan jari-jari alas 21 cm dan panjang garis pelukis (sisi miring) 35 cm. (Gunakan $\\pi = 22/7$).",
+                svg: `<svg width="200" height="105" viewBox="0 0 200 105"><polygon points="100,15 45,85 155,85" fill="#fde68a" stroke="#b45309" stroke-width="1.5"/><ellipse cx="100" cy="85" rx="55" ry="10" fill="none" stroke="#b45309" stroke-dasharray="3,2"/><line x1="100" y1="85" x2="155" y2="85" stroke="#92400e" stroke-width="1.5"/><text x="125" y="81" font-size="9" font-weight="bold" fill="#78350f">r=21</text><text x="142" y="48" font-size="9" font-weight="bold" fill="#78350f">s=35 cm</text></svg>`
+            },
+            13: {
+                title: "Stimulus 13: Tandon Air Rumah Tangga",
+                topic: "Aplikasi Bangun Ruang Tabung",
+                text: "Sebuah tandon air plastik berbentuk tabung memiliki diameter 1 meter dan tinggi 1,5 meter. Keluarga pemilik rumah menghabiskan air tandon yang terisi penuh tersebut dalam waktu 2 hari. (Gunakan $\\pi = 3,14$).",
+                svg: `<svg width="200" height="105" viewBox="0 0 200 105"><rect x="65" y="20" width="70" height="70" rx="8" fill="#3b82f6" opacity="0.85" stroke="#1d4ed8" stroke-width="2"/><line x1="65" y1="35" x2="135" y2="35" stroke="#93c5fd" stroke-width="1.5"/><line x1="65" y1="75" x2="135" y2="75" stroke="#93c5fd" stroke-width="1.5"/><text x="100" y="14" font-size="9" text-anchor="middle" font-weight="bold" fill="#1e3a8a">d = 1 m</text><text x="155" y="58" font-size="9" font-weight="bold" fill="#1e3a8a">t = 1,5 m</text></svg>`
+            },
+            14: {
+                title: "Stimulus 14: Kapsul Obat Multivitamin",
+                topic: "Gabungan Tabung & Bola",
+                text: "Sebuah kapsul obat berbentuk gabungan dari sebuah tabung di bagian tengah dan dua buah belahan setengah bola di kedua ujungnya. Diameter kapsul adalah 7 mm dan panjang total kapsul dari ujung ke ujung adalah 17 mm. (Gunakan $\\pi = 22/7$).",
+                svg: `<svg width="240" height="90" viewBox="0 0 240 90"><rect x="65" y="25" width="110" height="40" fill="#60a5fa" stroke="#1d4ed8" stroke-width="1.5"/><path d="M65 25 A20 20 0 0 0 65 65" fill="#2563eb" stroke="#1d4ed8" stroke-width="1.5"/><path d="M175 25 A20 20 0 0 1 175 65" fill="#2563eb" stroke="#1d4ed8" stroke-width="1.5"/><text x="120" y="18" font-size="9" text-anchor="middle" font-weight="bold" fill="#1e3a8a">Panjang Total = 17 mm</text><text x="120" y="80" font-size="9" text-anchor="middle" font-weight="bold" fill="#1e3a8a">Diameter = 7 mm</text></svg>`
+            },
+            15: {
+                title: "Stimulus 15: Bandul Alat Ukur Logam",
+                topic: "Gabungan Kerucut & Setengah Bola",
+                text: "Sebuah bandul timbangan logam menggabungkan bangun kerucut pejal di bagian atas dan setengah bola pejal di bagian bawah yang saling berimpit tepat pada alasnya. Diketahui jari-jari setengah bola adalah 3 cm dan tinggi kerucut adalah 4 cm.",
+                svg: `<svg width="200" height="110" viewBox="0 0 200 110"><polygon points="100,15 65,60 135,60" fill="#94a3b8" stroke="#334155" stroke-width="1.5"/><path d="M65 60 A35 35 0 0 0 135 60 Z" fill="#64748b" stroke="#334155" stroke-width="1.5"/><line x1="100" y1="15" x2="100" y2="60" stroke="#f8fafc" stroke-dasharray="2,2"/><text x="86" y="45" font-size="8" fill="#ffffff" font-weight="bold">t=4</text><text x="116" y="57" font-size="8" fill="#ffffff" font-weight="bold">r=3</text></svg>`
+            }
+        };
+
+        // --- 3. BANK 30 SOAL (15 PG & 15 PGK) ---
+        const questions = [
+            // Stimulus 1
+            { stimulusId: 1, type: "PG", text: "Berdasarkan pengamatan Budi, bentuk pangkat yang tepat untuk menunjukkan jumlah Amoeba pada pukul 10.00 pagi adalah...", options: ["$2^4$", "$2^5$", "$2^6$", "$2^7$"], answer: 2 },
+            { stimulusId: 1, type: "PGK", text: "Jika pada percobaan berikutnya Budi meletakkan 5 ekor Amoeba sekaligus pada pukul 09.00, pilihlah SEMUA pernyataan yang BENAR!", options: ["Pada pukul 10.00, jumlah Amoeba adalah $5 \\times 2^3$ ekor.", "Jumlah Amoeba mencapai 320 ekor pada pukul 11.00.", "Bentuk perkalian berulang jumlah Amoeba pukul 09.40 adalah $5 \\times 2 \\times 2$.", "Pertambahan jumlah Amoeba dari pukul 09.00 hingga 10.00 adalah 35 ekor."], answer: [0, 1, 2, 3] },
+            // Stimulus 2
+            { stimulusId: 2, type: "PG", text: "Berapa Byte total kapasitas penyimpanan flashdisk milik Siti (16 GB) jika dinyatakan dalam bilangan berpangkat bulat?", options: ["$2^{32}$ Byte", "$2^{34}$ Byte", "$2^{36}$ Byte", "$2^{46}$ Byte"], answer: 1 },
+            { stimulusId: 2, type: "PGK", text: "Siti memindahkan satu folder video sebesar 2 GB dan satu folder foto sebesar 512 MB ke dalam flashdisk 16 GB tersebut. Pilihlah SEMUA pernyataan yang BENAR!", options: ["Kapasitas folder foto milik Siti setara dengan $2^{29}$ Byte.", "Total kapasitas file yang dipindahkan (video + foto) adalah $2,5 \\times 2^{30}$ Byte.", "Sisa kapasitas flashdisk setelah memindahkan folder video saja adalah $14 \\times 2^{30}$ Byte.", "Jika seluruh file Siti digabungkan, ukurannya lebih besar dari $2^{31}$ Byte."], answer: [0, 1, 2, 3] },
+            // Stimulus 3
+            { stimulusId: 3, type: "PG", text: "Penulisan notasi ilmiah (bentuk baku) yang tepat untuk jarak rata-rata dari Matahari ke Bumi dan ke Neptunus berturut-turut adalah...", options: ["$15 \\times 10^7$ km dan $45 \\times 10^8$ km", "$1,5 \\times 10^8$ km dan $4,5 \\times 10^9$ km", "$1,5 \\times 10^9$ km dan $4,5 \\times 10^{10}$ km", "$0,15 \\times 10^9$ km dan $0,45 \\times 10^{10}$ km"], answer: 1 },
+            { stimulusId: 3, type: "PGK", text: "Kecepatan cahaya di ruang hampa adalah sekitar $3 \\times 10^5$ km/detik. Pilihlah SEMUA pernyataan yang BENAR terkait waktu tempuh cahaya Matahari!", options: ["Waktu yang dibutuhkan cahaya Matahari untuk sampai ke Bumi adalah tepat 500 detik.", "Bentuk notasi ilmiah waktu tempuh cahaya Matahari ke Bumi adalah $5 \\times 10^2$ detik.", "Cahaya Matahari membutuhkan waktu tepat 15.000 detik untuk mencapai Neptunus.", "Selisih jarak Jupiter dan Bumi dari Matahari dalam notasi ilmiah adalah $6,28 \\times 10^8$ km."], answer: [0, 1, 2, 3] },
+            // Stimulus 4
+            { stimulusId: 4, type: "PG", text: "Jika diameter sel darah merah manusia ($8 \\times 10^{-6}$ m) ditulis dalam bentuk desimal biasa, penulisan yang benar adalah...", options: ["0,000008 meter", "0,00008 meter", "0,0008 meter", "0,008 meter"], answer: 0 },
+            { stimulusId: 4, type: "PGK", text: "Berdasarkan perbandingan ukuran sel darah merah dan virus influenza, pilihlah SEMUA pernyataan yang BENAR!", options: ["Ukuran diameter sel darah merah lebih besar dibandingkan diameter virus influenza.", "Ukuran sel darah merah sekitar 66,7 kali lipat lebih besar dari ukuran virus influenza.", "Selisih diameter antara sel darah merah dan virus influenza adalah $7,88 \\times 10^{-6}$ meter.", "Ukuran diameter virus influenza dalam bentuk desimal biasa adalah 0,00000012 meter."], answer: [0, 1, 2, 3] },
+            // Stimulus 5
+            { stimulusId: 5, type: "PG", text: "Berapakah jumlah lebah calon ratu baru yang menetas khusus pada Generasi ke-5?", options: ["15 ekor", "81 ekor", "243 ekor", "729 ekor"], answer: 2 },
+            { stimulusId: 5, type: "PGK", text: "Berdasarkan aturan simulasi populasi lebah tersebut, pilihlah SEMUA pernyataan yang BENAR!", options: ["Bentuk pangkat dari jumlah lebah pada Generasi ke-4 adalah $3^4$.", "Gabungan jumlah lebah pada Generasi ke-3 dan Generasi ke-4 adalah 108 ekor.", "Jumlah lebah pada Generasi ke-6 adalah 729 ekor (lebih dari 700 ekor).", "Perbandingan jumlah lebah antara Generasi ke-5 dan Generasi ke-3 adalah 9 : 1."], answer: [0, 1, 2, 3] },
+            // Stimulus 6
+            { stimulusId: 6, type: "PG", text: "Dua segitiga berwarna biru pada ubin persegi panjang tersebut dipastikan kongruen. Syarat kekongruenan yang pasti dipenuhi adalah...", options: ["Sisi - Sudut - Sisi", "Sisi - Sisi - Sisi", "Sudut - Sisi - Sudut", "Sudut - Sudut - Sudut"], answer: 1 },
+            { stimulusId: 6, type: "PGK", text: "Berdasarkan ukuran ubin persegi panjang (40 cm × 30 cm), pilihlah SEMUA pernyataan yang BENAR!", options: ["Panjang garis diagonal ubin tersebut adalah 50 cm.", "Luas satu buah segitiga berwarna biru adalah 300 cm².", "Keliling satu buah segitiga berwarna biru adalah 90 cm.", "Tinggi segitiga biru dari titik potong diagonal ke sisi 40 cm adalah 15 cm."], answer: [0, 1, 2, 3] },
+            // Stimulus 7
+            { stimulusId: 7, type: "PG", text: "Berapakah tinggi gedung pencakar langit yang sebenarnya jika tinggi pada maket 40 cm dengan skala 1 : 150?", options: ["6 meter", "15 meter", "60 meter", "600 meter"], answer: 2 },
+            { stimulusId: 7, type: "PGK", text: "Berdasarkan kesebangunan antara maket dan gedung sebenarnya (skala 1 : 150), pilihlah SEMUA pernyataan yang BENAR!", options: ["Lebar gedung aslinya adalah 30 meter.", "Jika pintu utama pada maket tingginya 2 cm, tinggi pintu sebenarnya adalah 3 meter.", "Perbandingan luas lantai dasar maket dengan gedung sebenarnya adalah 1 : 22.500.", "Jika panjang gedung sebenarnya 45 meter, maka panjang pada maket adalah 30 cm."], answer: [0, 1, 2, 3] },
+            // Stimulus 8
+            { stimulusId: 8, type: "PG", text: "Jika segitiga ABC dan segitiga EDC sebangun, berapakah lebar sungai (jarak AB)?", options: ["8 meter", "12 meter", "14 meter", "16 meter"], answer: 1 },
+            { stimulusId: 8, type: "PGK", text: "Terkait pengukuran lebar sungai menggunakan konsep kesebangunan tersebut, pilihlah SEMUA pernyataan yang BENAR!", options: ["Jika jarak BC diubah menjadi 6 m (ukuran lain tetap), maka lebar sungai AB menjadi 9 m.", "Segitiga ABC dan EDC sebangun karena ketiga sudut bersesuaian sama besar.", "Jika jarak menjauhi sungai (DE) diperpanjang menjadi 4 m, hasil taksiran lebar sungai menjadi 16 m.", "Perbandingan panjang sisi miring AC dan EC adalah 4 : 1."], answer: [0, 1, 2, 3] },
+            // Stimulus 9
+            { stimulusId: 9, type: "PG", text: "Berapakah perbandingan kesebangunan antara jarak Budi ke cermin (2 m) dengan jarak cermin ke tiang bendera (8 m)?", options: ["1 : 2", "1 : 3", "1 : 4", "1 : 8"], answer: 2 },
+            { stimulusId: 9, type: "PGK", text: "Dari skema pengukuran tiang bendera dengan cermin datar tersebut, pilihlah SEMUA pernyataan yang BENAR!", options: ["Tinggi tiang bendera sekolah tersebut adalah 6 meter.", "Dua segitiga siku-siku yang terbentuk sebangun dengan faktor skala 1 : 4.", "Jika tinggi mata Budi 160 cm pada posisi sama, tiang bendera terukur setinggi 6,4 meter.", "Jika Budi mundur menjauhi cermin, posisi cermin harus digeser agar puncak tiang tetap terlihat."], answer: [0, 1, 2, 3] },
+            // Stimulus 10
+            { stimulusId: 10, type: "PG", text: "Berapakah tinggi tegak lurus dari rangka baja jembatan tersebut?", options: ["$3\\sqrt{3}$ meter", "6 meter", "$6\\sqrt{3}$ meter", "9 meter"], answer: 0 },
+            { stimulusId: 10, type: "PGK", text: "Mengenai struktur rangka baja jembatan sepanjang 60 meter tersebut, pilihlah SEMUA pernyataan yang BENAR!", options: ["Panjang satu batang baja (satu sisi segitiga) adalah 6 meter.", "Ada lebih dari 20 batang baja yang digunakan untuk membentuk satu sisi rangka jembatan.", "Luas setiap satu segitiga penyangga adalah $9\\sqrt{3}$ meter persegi.", "Semua segitiga penyangga kongruen berdasarkan syarat Sisi - Sisi - Sisi."], answer: [0, 1, 2, 3] },
+            // Stimulus 11
+            { stimulusId: 11, type: "PG", text: "Berapakah luas kertas label yang dibutuhkan untuk menutupi seluruh selimut satu kaleng susu tersebut?", options: ["154 cm²", "330 cm²", "660 cm²", "968 cm²"], answer: 2 },
+            { stimulusId: 11, type: "PGK", text: "Terkait dimensi dan kapasitas kaleng susu tersebut (r = 7 cm, t = 15 cm), pilihlah SEMUA pernyataan yang BENAR!", options: ["Volume maksimal susu yang dapat ditampung satu kaleng adalah 2.310 cm³.", "Luas plat seng untuk membuat satu kaleng utuh (dengan alas & tutup) adalah 968 cm².", "Jika tinggi kaleng diturunkan menjadi 7,5 cm (jari-jari tetap), volumenya menjadi setengahnya.", "Jika jari-jari alas diperbesar 2 kali lipat (tinggi tetap), volumenya menjadi 4 kali lipat."], answer: [0, 1, 2, 3] },
+            // Stimulus 12
+            { stimulusId: 12, type: "PG", text: "Berapakah luas anyaman bambu minimum yang dibutuhkan Pak Parjo untuk membuat satu buah caping tanpa alas tersebut?", options: ["1.386 cm²", "2.310 cm²", "3.696 cm²", "4.620 cm²"], answer: 1 },
+            { stimulusId: 12, type: "PGK", text: "Terkait bentuk geometris kerucut pada caping (r = 21 cm, s = 35 cm), pilihlah SEMUA pernyataan yang BENAR!", options: ["Tinggi vertikal (t) dari puncak caping ke pusat alasnya adalah 28 cm.", "Rumus luas bahan caping tanpa alas yang digunakan adalah $\\pi \\times r \\times s$.", "Volume ruang udara di dalam caping tersebut adalah 12.936 cm³.", "Jika harga bahan Rp50 per cm², biaya anyaman untuk 1 caping adalah Rp115.500 (lebih dari Rp100.000)."], answer: [0, 1, 2, 3] },
+            // Stimulus 13
+            { stimulusId: 13, type: "PG", text: "Kapasitas volume maksimal (dalam liter) air yang dapat ditampung tandon tersebut adalah... (1 m³ = 1.000 liter)", options: ["1.177,5 Liter", "2.355 Liter", "4.710 Liter", "11.775 Liter"], answer: 0 },
+            { stimulusId: 13, type: "PGK", text: "Mengenai spesifikasi tandon air (d = 1 m, t = 1,5 m) dan penggunaannya, pilihlah SEMUA pernyataan yang BENAR!", options: ["Luas alas (dasar) dari tandon tersebut adalah 0,785 m².", "Konsumsi rata-rata air harian keluarga tersebut adalah 588,75 liter.", "Luas permukaan plastik keseluruhan tandon tertutup kurang dari 6 m².", "Jika tinggi tandon diubah menjadi 2 m (diameter tetap), kapasitasnya menjadi 1.570 liter."], answer: [0, 1, 3] },
+            // Stimulus 14
+            { stimulusId: 14, type: "PG", text: "Berapakah panjang bagian tabung (tengah) dari kapsul obat tersebut?", options: ["3,5 mm", "7 mm", "10 mm", "13,5 mm"], answer: 2 },
+            { stimulusId: 14, type: "PGK", text: "Berdasarkan ukuran kapsul gabungan tersebut (d = 7 mm, panjang total = 17 mm), pilihlah SEMUA pernyataan yang BENAR!", options: ["Volume kapsul dapat dihitung dengan menjumlahkan volume tabung dan satu volume bola penuh.", "Volume bagian tabung kapsul saja adalah 385 mm³.", "Total volume seluruh obat dalam 1 kapsul adalah 564,67 mm³ (lebih dari 550 mm³).", "Jika kapsul dibelah memanjang, penampangnya membentuk persegi panjang tanpa unsur lengkung."], answer: [0, 1, 2] },
+            // Stimulus 15
+            { stimulusId: 15, type: "PG", text: "Berapakah luas permukaan seluruh bandul timbangan tersebut? (Bidang alas kerucut tidak dihitung karena berimpit di dalam)", options: ["$24\\pi$ cm²", "$33\\pi$ cm²", "$39\\pi$ cm²", "$42\\pi$ cm²"], answer: 1 },
+            { stimulusId: 15, type: "PGK", text: "Mengenai bandul timbangan (r = 3 cm, t kerucut = 4 cm), pilihlah SEMUA pernyataan yang BENAR!", options: ["Panjang garis pelukis (s) kerucut adalah 5 cm.", "Volume seluruh bandul adalah gabungan volume kerucut dan setengah bola.", "Total volume logam pembuat bandul adalah $30\\pi$ cm³.", "Luas permukaan lengkung setengah bola bagian bawah bandul adalah $18\\pi$ cm²."], answer: [0, 1, 2, 3] }
+        ];
+
+        // --- 4. INISIALISASI & PENYIMPANAN PROFIL SEKOLAH ---
+        function loadConfig() {
+            const saved = localStorage.getItem('cbt_SAS_config');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    appConfig = { ...appConfig, ...parsed };
+                } catch (e) {}
+            }
+            // Prioritaskan DEFAULT_WEBHOOK_URL jika diisi di dalam kode agar semua perangkat otomatis terhubung
+            if (DEFAULT_WEBHOOK_URL && DEFAULT_WEBHOOK_URL.trim() !== "") {
+                appConfig.webhookUrl = DEFAULT_WEBHOOK_URL.trim();
+            }
+            const savedRecords = localStorage.getItem('cbt_SAS_records');
+            if (savedRecords) {
+                try { examRecords = JSON.parse(savedRecords); } catch (e) {}
+            }
+            applyConfigToUI();
+        }
+
+        function applyConfigToUI() {
+            document.getElementById('header-school-name').textContent = appConfig.schoolName;
+            document.getElementById('header-exam-title').textContent = appConfig.examTitle;
+            document.getElementById('res-school-name').textContent = appConfig.schoolName;
+            document.getElementById('hint-token').textContent = appConfig.token;
+
+            document.getElementById('set-school-name').value = appConfig.schoolName;
+            document.getElementById('set-exam-title').value = appConfig.examTitle;
+            document.getElementById('set-token').value = appConfig.token;
+            document.getElementById('set-duration').value = appConfig.duration;
+            document.getElementById('set-webhook-url').value = appConfig.webhookUrl;
+
+            const syncBadge = document.getElementById('sync-badge');
+            if (appConfig.webhookUrl && appConfig.webhookUrl.trim() !== "") {
+                syncBadge.classList.remove('hidden');
+                syncBadge.classList.add('sm:inline-flex');
+            } else {
+                syncBadge.classList.add('hidden');
+                syncBadge.classList.remove('sm:inline-flex');
+            }
+        }
+
+        function saveSchoolSettings(e) {
+            e.preventDefault();
+            appConfig.schoolName = document.getElementById('set-school-name').value.trim();
+            appConfig.examTitle = document.getElementById('set-exam-title').value.trim();
+            appConfig.token = document.getElementById('set-token').value.trim().toUpperCase();
+            appConfig.duration = parseInt(document.getElementById('set-duration').value) || 90;
+            appConfig.webhookUrl = document.getElementById('set-webhook-url').value.trim();
+
+            localStorage.setItem('cbt_SAS_config', JSON.stringify(appConfig));
+            applyConfigToUI();
+            showModal("Pengaturan Disimpan", "Profil sekolah, token soal, dan konfigurasi Google Sheet berhasil diperbarui.", "success");
+        }
+
+        // --- 5. KEAMANAN AKSES ADMIN & NAVIGASI HALAMAN ---
+        function openAdminAuthModal() {
+            if (studentState.isExamActive) {
+                showModal("Akses Dibatasi", "Anda tidak dapat membuka Panel Admin saat sedang mengerjakan ujian.", "warning");
+                return;
+            }
+            if (isAdminAuthenticated) {
+                switchView('admin');
+                return;
+            }
+            const modal = document.getElementById('admin-auth-modal');
+            const input = document.getElementById('admin-password-input');
+            const err = document.getElementById('admin-auth-error');
+            input.value = "";
+            err.classList.add('hidden');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => input.focus(), 100);
+        }
+
+        function closeAdminAuthModal() {
+            const modal = document.getElementById('admin-auth-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function verifyAdminPassword(e) {
+            e.preventDefault();
+            const inputVal = document.getElementById('admin-password-input').value;
+            const err = document.getElementById('admin-auth-error');
+
+            if (inputVal === ADMIN_PASSWORD) {
+                isAdminAuthenticated = true;
+                closeAdminAuthModal();
+                switchView('admin');
+            } else {
+                err.classList.remove('hidden');
+                document.getElementById('admin-password-input').value = "";
+                document.getElementById('admin-password-input').focus();
+            }
+        }
+
+        function switchView(viewName) {
+            ['view-login', 'view-exam', 'view-result', 'view-admin'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById('view-' + viewName).classList.remove('hidden');
+
+            const btnAdmin = document.getElementById('btn-nav-admin');
+            const btnLogin = document.getElementById('btn-nav-login');
+
+            if (viewName === 'admin') {
+                btnAdmin.classList.add('hidden');
+                btnLogin.classList.remove('hidden');
+                renderLiveTable();
+                if (appConfig.webhookUrl && appConfig.webhookUrl.trim() !== "") {
+                    fetchFromSheet(true);
+                }
+            } else if (viewName === 'exam') {
+                btnAdmin.classList.add('hidden');
+                btnLogin.classList.add('hidden');
+            } else {
+                // Kunci ulang sesi admin saat kembali ke halaman login/hasil
+                isAdminAuthenticated = false;
+                btnAdmin.classList.remove('hidden');
+                btnLogin.classList.add('hidden');
+            }
+            lucide.createIcons();
+        }
+
+        // --- 6. LOGIKA LOGIN & DETEKSI PELANGGARAN REAL-TIME ---
+        function handleLogin(e) {
+            e.preventDefault();
+            const nama = document.getElementById('input-nama').value.trim();
+            const token = document.getElementById('input-token').value.trim().toUpperCase();
+
+            if (!nama) {
+                showModal("Peringatan", "Silakan masukkan nama lengkap Anda terlebih dahulu.", "warning");
+                return;
+            }
+            if (token !== appConfig.token.toUpperCase()) {
+                showModal("Token Tidak Valid", "Token soal yang Anda masukkan salah. Silakan periksa kembali token dari pengawas.", "error");
+                return;
+            }
+
+            studentState = {
+                name: nama,
+                token: token,
+                answers: Array(30).fill(null),
+                ragu: Array(30).fill(false),
+                currentIdx: 0,
+                violations: 0,
+                violationLogs: [],
+                timeLeft: appConfig.duration * 60,
+                timerInterval: null,
+                isExamActive: true
+            };
+
+            document.getElementById('exam-student-name').textContent = studentState.name;
+            document.getElementById('violation-count').textContent = "0";
+
+            switchView('exam');
+            renderQuestionGrid();
+            renderQuestion(0);
+            startTimer();
+
+            // Kirim status mulai ujian ke Sheet (jika terhubung)
+            sendDataToSheet({
+                nama: studentState.name,
+                token: studentState.token,
+                skor: "-",
+                benar: "-",
+                pelanggaran: 0,
+                logPelanggaran: "Mulai mengerjakan ujian",
+                status: "SEDANG UJIAN"
+            });
+        }
+
+        // Deteksi perpindahan tab atau kehilangan fokus jendela
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden && studentState.isExamActive) {
+                recordViolation("Berpindah tab atau meminimalkan browser");
+            }
+        });
+
+        window.addEventListener("blur", () => {
+            if (studentState.isExamActive) {
+                recordViolation("Keluar dari jendela ujian / membuka aplikasi lain");
+            }
+        });
+
+        let lastViolationTime = 0;
+        function recordViolation(reason) {
+            const now = Date.now();
+            if (now - lastViolationTime < 2500) return; // Mencegah duplikasi hitungan dalam 2.5 detik
+            lastViolationTime = now;
+
+            studentState.violations++;
+            const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const logEntry = `[${timeStr}] ${reason}`;
+            studentState.violationLogs.push(logEntry);
+
+            document.getElementById('violation-count').textContent = studentState.violations;
+
+            showModal(
+                "PERINGATAN PELANGGARAN!",
+                `Terdeteksi aktivitas mencurigakan (${reason}). Pelanggaran ke-${studentState.violations} ini telah dicatat dan dilaporkan ke Google Sheet pengawas!`,
+                "error"
+            );
+
+            // Kirim log pelanggaran real-time ke Google Sheet
+            sendDataToSheet({
+                nama: studentState.name,
+                token: studentState.token,
+                skor: "-",
+                benar: "-",
+                pelanggaran: studentState.violations,
+                logPelanggaran: logEntry,
+                status: "PERINGATAN PELANGGARAN"
+            });
+        }
+
+        // --- 7. TIMER & RENDER SOAL UJIAN ---
+        function startTimer() {
+            clearInterval(studentState.timerInterval);
+            updateTimerDisplay();
+            studentState.timerInterval = setInterval(() => {
+                studentState.timeLeft--;
+                updateTimerDisplay();
+                if (studentState.timeLeft <= 0) {
+                    clearInterval(studentState.timerInterval);
+                    finishExam();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(studentState.timeLeft / 60).toString().padStart(2, '0');
+            const s = (studentState.timeLeft % 60).toString().padStart(2, '0');
+            const timerEl = document.getElementById('exam-timer');
+            timerEl.textContent = `${m}:${s}`;
+            if (studentState.timeLeft <= 300) {
+                timerEl.classList.add('text-rose-600', 'animate-pulse');
+            } else {
+                timerEl.classList.remove('text-rose-600', 'animate-pulse');
+            }
+        }
+
+        function renderQuestionGrid() {
+            const grid = document.getElementById('question-grid');
+            grid.innerHTML = "";
+            let answeredTotal = 0;
+
+            questions.forEach((q, idx) => {
+                const ans = studentState.answers[idx];
+                const isAnswered = q.type === "PG" ? ans !== null : (Array.isArray(ans) && ans.length > 0);
+                if (isAnswered) answeredTotal++;
+
+                const btn = document.createElement('button');
+                btn.textContent = idx + 1;
+                btn.onclick = () => renderQuestion(idx);
+
+                let baseClass = "h-10 rounded-xl font-bold text-xs transition flex items-center justify-center ";
+                if (idx === studentState.currentIdx) {
+                    baseClass += "ring-2 ring-blue-600 ring-offset-1 ";
+                }
+
+                if (studentState.ragu[idx]) {
+                    baseClass += "bg-amber-400 text-amber-950 border border-amber-500";
+                } else if (isAnswered) {
+                    baseClass += "bg-blue-600 text-white shadow-sm";
+                } else {
+                    baseClass += "bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200";
+                }
+
+                btn.className = baseClass;
+                grid.appendChild(btn);
+            });
+
+            document.getElementById('answered-count').textContent = answeredTotal;
+        }
+
+        function renderQuestion(idx) {
+            studentState.currentIdx = idx;
+            const q = questions[idx];
+            const stim = stimuli[q.stimulusId];
+
+            document.getElementById('q-number').textContent = idx + 1;
+            const badge = document.getElementById('q-type-badge');
+            if (q.type === "PG") {
+                badge.textContent = "Pilihan Ganda";
+                badge.className = "text-xs font-semibold px-2.5 py-1 rounded-lg bg-blue-100 text-blue-700";
+            } else {
+                badge.textContent = "Pilihan Ganda Kompleks (Pilih > 1)";
+                badge.className = "text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700";
+            }
+
+            document.getElementById('q-topic').textContent = stim.topic;
+            document.getElementById('stimulus-title').textContent = stim.title;
+            document.getElementById('stimulus-visual').innerHTML = stim.svg;
+            document.getElementById('stimulus-text').innerHTML = stim.text;
+            document.getElementById('question-text').innerHTML = q.text;
+
+            const optContainer = document.getElementById('options-container');
+            optContainer.innerHTML = "";
+            const letters = ["A", "B", "C", "D"];
+
+            q.options.forEach((optText, optIdx) => {
+                const isSelected = q.type === "PG"
+                    ? studentState.answers[idx] === optIdx
+                    : (Array.isArray(studentState.answers[idx]) && studentState.answers[idx].includes(optIdx));
+
+                const card = document.createElement('div');
+                card.onclick = () => selectOption(idx, optIdx);
+                card.className = `p-4 rounded-xl border-2 cursor-pointer transition flex items-start gap-3.5 ${
+                    isSelected
+                        ? "border-blue-600 bg-blue-50/70 shadow-sm"
+                        : "border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50"
+                }`;
+
+                const indicator = q.type === "PG"
+                    ? `<div class="w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center shrink-0 mt-0.5 ${
+                        isSelected ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600"
+                      }">${letters[optIdx]}</div>`
+                    : `<div class="w-6 h-6 rounded-md border-2 flex items-center justify-center shrink-0 mt-0.5 ${
+                        isSelected ? "bg-blue-600 border-blue-600 text-white" : "border-slate-300 bg-white"
+                      }">${isSelected ? "✓" : ""}</div>`;
+
+                card.innerHTML = `
+                    ${indicator}
+                    <div class="text-sm text-slate-800 leading-relaxed pt-0.5">${optText}</div>
+                `;
+                optContainer.appendChild(card);
+            });
+
+            document.getElementById('btn-prev').disabled = idx === 0;
+            const btnNext = document.getElementById('btn-next');
+            if (idx === questions.length - 1) {
+                btnNext.innerHTML = `<span>Selesai</span><i data-lucide="check" class="w-4 h-4"></i>`;
+                btnNext.onclick = confirmFinishExam;
+            } else {
+                btnNext.innerHTML = `<span>Selanjutnya</span><i data-lucide="chevron-right" class="w-4 h-4"></i>`;
+                btnNext.onclick = nextQuestion;
+            }
+
+            renderQuestionGrid();
+            lucide.createIcons();
+
+            if (window.renderMathInElement) {
+                renderMathInElement(document.getElementById('view-exam'), {
+                    delimiters: [
+                        { left: "$$", right: "$$", display: true },
+                        { left: "$", right: "$", display: false }
+                    ]
+                });
+            }
+        }
+
+        function selectOption(qIdx, optIdx) {
+            const q = questions[qIdx];
+            if (q.type === "PG") {
+                studentState.answers[qIdx] = optIdx;
+            } else {
+                let current = Array.isArray(studentState.answers[qIdx]) ? [...studentState.answers[qIdx]] : [];
+                if (current.includes(optIdx)) {
+                    current = current.filter(i => i !== optIdx);
+                } else {
+                    current.push(optIdx);
+                }
+                studentState.answers[qIdx] = current;
+            }
+            renderQuestion(qIdx);
+        }
+
+        function toggleRagu() {
+            studentState.ragu[studentState.currentIdx] = !studentState.ragu[studentState.currentIdx];
+            renderQuestionGrid();
+        }
+
+        function prevQuestion() {
+            if (studentState.currentIdx > 0) renderQuestion(studentState.currentIdx - 1);
+        }
+
+        function nextQuestion() {
+            if (studentState.currentIdx < questions.length - 1) renderQuestion(studentState.currentIdx + 1);
+        }
+
+        // --- 8. PENILAIAN & SINKRONISASI KE GOOGLE SHEET ---
+        function confirmFinishExam() {
+            showModal(
+                "Konfirmasi Selesai Ujian",
+                "Apakah Anda yakin ingin mengakhiri ujian dan mengirimkan seluruh jawaban Anda sekarang?",
+                "confirm",
+                finishExam
+            );
+        }
+
+        function finishExam() {
+            clearInterval(studentState.timerInterval);
+            studentState.isExamActive = false;
+
+            let correctCount = 0;
+            questions.forEach((q, idx) => {
+                const ans = studentState.answers[idx];
+                if (q.type === "PG") {
+                    if (ans === q.answer) correctCount++;
+                } else {
+                    if (Array.isArray(ans) && ans.length === q.answer.length) {
+                        const sortedUser = [...ans].sort().join(',');
+                        const sortedKey = [...q.answer].sort().join(',');
+                        if (sortedUser === sortedKey) correctCount++;
+                    }
+                }
+            });
+
+            const finalScore = Math.round((correctCount / questions.length) * 100);
+            const timestamp = new Date().toLocaleString('id-ID');
+            const detailLog = studentState.violationLogs.length > 0
+                ? studentState.violationLogs.join(" | ")
+                : "Bersih (Tidak ada pelanggaran)";
+
+            const record = {
+                waktu: timestamp,
+                nama: studentState.name,
+                token: studentState.token,
+                skor: finalScore,
+                benar: correctCount,
+                pelanggaran: studentState.violations,
+                logPelanggaran: detailLog,
+                status: "SELESAI"
+            };
+
+            examRecords.unshift(record);
+            localStorage.setItem('cbt_SAS_records', JSON.stringify(examRecords));
+
+            // Kirim ke Google Sheet secara real-time
+            sendDataToSheet(record);
+
+            document.getElementById('res-student-name').textContent = studentState.name;
+            document.getElementById('res-score').textContent = finalScore;
+            document.getElementById('res-correct').innerHTML = `${correctCount}<span class="text-sm font-normal">/30</span>`;
+            document.getElementById('res-violations').textContent = studentState.violations;
+
+            switchView('result');
+        }
+
+        function sendDataToSheet(payload) {
+            const targetUrl = (DEFAULT_WEBHOOK_URL && DEFAULT_WEBHOOK_URL.trim() !== "") 
+                ? DEFAULT_WEBHOOK_URL.trim() 
+                : appConfig.webhookUrl.trim();
+            if (!targetUrl) return;
+            try {
+                // Menggunakan text/plain + keepalive agar tidak terkena blokir CORS preflight di HP/browser murid
+                fetch(targetUrl, {
+                    method: "POST",
+                    mode: "no-cors",
+                    keepalive: true,
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify(payload)
+                }).catch(err => console.error("Gagal kirim ke Sheet:", err));
+            } catch (e) {
+                console.error("Error Webhook:", e);
+            }
+        }
+
+        async function fetchFromSheet(silent = false) {
+            const targetUrl = (DEFAULT_WEBHOOK_URL && DEFAULT_WEBHOOK_URL.trim() !== "") 
+                ? DEFAULT_WEBHOOK_URL.trim() 
+                : appConfig.webhookUrl.trim();
+            if (!targetUrl) {
+                if (!silent) showModal("URL Belum Diatur", "Silakan masukkan URL Webhook Google Apps Script terlebih dahulu.", "warning");
+                return;
+            }
+            try {
+                const response = await fetch(targetUrl);
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    examRecords = data;
+                    localStorage.setItem('cbt_SAS_records', JSON.stringify(examRecords));
+                    renderLiveTable();
+                    if (!silent) showModal("Sinkronisasi Berhasil", `Berhasil memuat ${data.length} baris data terbaru dari Google Sheet!`, "success");
+                }
+            } catch (err) {
+                if (!silent) showModal("Gagal Menarik Data", "Pastikan kode Apps Script terbaru sudah di-Deploy dengan versi baru (Akses: Siapa saja).", "error");
+            }
+        }
+
+        function logoutToLogin() {
+            document.getElementById('input-nama').value = "";
+            document.getElementById('input-token').value = "";
+            switchView('login');
+        }
+
+        // --- 9. TABEL MONITORING ADMIN, EKSPOR CSV & MODAL ---
+        function renderLiveTable() {
+            const tbody = document.getElementById('live-table-body');
+            if (examRecords.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400 text-xs">Belum ada data peserta yang menyelesaikan ujian di perangkat ini.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = examRecords.map(r => `
+                <tr class="hover:bg-slate-50/80 transition">
+                    <td class="py-3 px-3 text-xs text-slate-500 whitespace-nowrap">${r.waktu}</td>
+                    <td class="py-3 px-3 font-bold text-slate-800">${r.nama}</td>
+                    <td class="py-3 px-3 text-center">
+                        <span class="px-2.5 py-1 rounded-lg font-extrabold text-xs ${r.skor >= 75 ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}">${r.skor}</span>
+                    </td>
+                    <td class="py-3 px-3 text-center">
+                        <span class="px-2.5 py-1 rounded-lg font-bold text-xs ${r.pelanggaran > 0 ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'}">${r.pelanggaran}x</span>
+                    </td>
+                    <td class="py-3 px-3 text-xs text-slate-600 max-w-xs truncate" title="${r.logPelanggaran}">${r.logPelanggaran}</td>
+                </tr>
+            `).join('');
+        }
+
+        function exportCSV() {
+            if (examRecords.length === 0) {
+                showModal("Data Kosong", "Belum ada data ujian untuk diunduh.", "warning");
+                return;
+            }
+            const headers = ["Waktu", "Nama Murid", "Token", "Nilai Akhir", "Benar", "Jumlah Pelanggaran", "Detail Pelanggaran"];
+            const rows = examRecords.map(r => [
+                `"${r.waktu}"`, `"${r.nama}"`, `"${r.token}"`, r.skor, r.benar, r.pelanggaran, `"${r.logPelanggaran}"`
+            ]);
+            const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Hasil_SAS_${appConfig.schoolName.replace(/\s+/g, '_')}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function clearRecords() {
+            showModal("Hapus Data Lokal?", "Semua riwayat nilai pada tampilan tabel browser ini akan dihapus.", "confirm", () => {
+                examRecords = [];
+                localStorage.removeItem('cbt_SAS_records');
+                renderLiveTable();
+            });
+        }
+
+        function copyAppsScript() {
+            const codeEl = document.getElementById('apps-script-code');
+            const textarea = document.createElement('textarea');
+            textarea.value = codeEl.textContent;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            showModal("Kode Disalin", "Kode Google Apps Script berhasil disalin ke clipboard! Silakan tempel di editor Apps Script Google Sheet Anda.", "success");
+        }
+
+        function showModal(title, message, type = "info", onConfirm = null) {
+            const modal = document.getElementById('custom-modal');
+            const titleEl = document.getElementById('modal-title');
+            const msgEl = document.getElementById('modal-message');
+            const iconBox = document.getElementById('modal-icon-container');
+            const btnCancel = document.getElementById('modal-btn-cancel');
+            const btnConfirm = document.getElementById('modal-btn-confirm');
+
+            titleEl.textContent = title;
+            msgEl.textContent = message;
+
+            if (type === "error") {
+                iconBox.className = "p-2.5 rounded-full bg-rose-100 text-rose-600";
+                iconBox.innerHTML = `<i data-lucide="alert-octagon" class="w-6 h-6"></i>`;
+            } else if (type === "warning") {
+                iconBox.className = "p-2.5 rounded-full bg-amber-100 text-amber-600";
+                iconBox.innerHTML = `<i data-lucide="alert-triangle" class="w-6 h-6"></i>`;
+            } else if (type === "success") {
+                iconBox.className = "p-2.5 rounded-full bg-emerald-100 text-emerald-600";
+                iconBox.innerHTML = `<i data-lucide="check-circle" class="w-6 h-6"></i>`;
+            } else {
+                iconBox.className = "p-2.5 rounded-full bg-blue-100 text-blue-600";
+                iconBox.innerHTML = `<i data-lucide="help-circle" class="w-6 h-6"></i>`;
+            }
+
+            if (type === "confirm" && onConfirm) {
+                btnCancel.classList.remove('hidden');
+                btnConfirm.textContent = "Ya, LanjuSASn";
+                btnConfirm.onclick = () => {
+                    closeModal();
+                    onConfirm();
+                };
+            } else {
+                btnCancel.classList.add('hidden');
+                btnConfirm.textContent = "Mengerti";
+                btnConfirm.onclick = closeModal;
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('custom-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        window.onload = function () {
+            loadConfig();
+            lucide.createIcons();
+        };
+    </script>
+</body>
+</html>
