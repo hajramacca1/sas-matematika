@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CBT SAS - Matematika</title>
+    <title>CBT SAS - MATEMATIKA</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter -->
@@ -460,6 +460,10 @@ function doPost(e) {
                             <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
                             <span>Tarik Data Sheet</span>
                         </button>
+                        <button onclick="testSheetConnection()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm">
+                            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                            <span>Tes Kirim Sheet</span>
+                        </button>
                         <button onclick="exportCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition">
                             <i data-lucide="download" class="w-3.5 h-3.5"></i>
                             <span>Unduh CSV</span>
@@ -494,7 +498,7 @@ function doPost(e) {
     <script>
         // --- 1. KONFIGURASI & STATE APLIKASI (MULTI-PERANGKAT) ---
         // WAJIB DIISI: Tempel URL Web App Google Apps Script Anda di dalam tanda kutip di bawah ini sebelum dibagikan ke perangkat murid!
-        const DEFAULT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyFILR_DLuLFo3AGs__ADjLORSvjJaAIrCsq3_U0DtzsJTvjGEVU5veTPKqEH2DwvyLQQ/exec";
+        const DEFAULT_WEBHOOK_URL = " https://script.googleusercontent.com/a/macros/guru.smp.belajar.id/echo?user_content_key=AUkAhnQwyzqYvee3yOUnWwI05-tmDm1nxCSe7QyHwSi9cyuivZIAkrFNofwQsgJDtaSqawAUTRajzVuxApOsBY0Zj5d3iyz0S6EM3o8-RmgMI0bFZWrV5_YRALXuPqlyEwBZ8WvNsBiwmM3c4R83IYSIQ5Lc1LXq4jfSk3DUEZ4mvdAcme4kuZ6hAaF8lvaRcO3lzc_kgjqF3C6zxNGAa19LZ6Et6wXpUBW6GkNGfZxVXXUvvPdp90sm3M3cM3OoM2LZ5Ug8avNY27kXv5wPExBEnPWRM2s_PaY2wfLAor_oJ1MpWaMdSNv0ba3EWjn9QQ&lib=M170hxtqIek12h5_B_CtevsiW9xHEpa6V ";
         const ADMIN_PASSWORD = "hajra03";
         let isAdminAuthenticated = false;
 
@@ -1066,9 +1070,10 @@ function doPost(e) {
             if (savedConfig) {
                 const parsed = JSON.parse(savedConfig);
                 appConfig = { ...appConfig, ...parsed };
-                if (DEFAULT_WEBHOOK_URL && !parsed.webhookUrl) {
-                    appConfig.webhookUrl = DEFAULT_WEBHOOK_URL;
-                }
+            }
+            // Prioritaskan DEFAULT_WEBHOOK_URL jika sudah ditanam di dalam kode
+            if (DEFAULT_WEBHOOK_URL && DEFAULT_WEBHOOK_URL.trim() !== "") {
+                appConfig.webhookUrl = DEFAULT_WEBHOOK_URL.trim();
             }
             const savedRecords = localStorage.getItem('cbt_SAS_records');
             if (savedRecords) {
@@ -1516,28 +1521,64 @@ function doPost(e) {
         }
 
         function sendDataToSheet(payload) {
-            if (!appConfig.webhookUrl) return;
+            const targetUrl = (DEFAULT_WEBHOOK_URL && DEFAULT_WEBHOOK_URL.trim() !== "") 
+                ? DEFAULT_WEBHOOK_URL.trim() 
+                : appConfig.webhookUrl;
+            if (!targetUrl) return;
+
+            const jsonStr = JSON.stringify(payload);
             try {
-                fetch(appConfig.webhookUrl, {
+                // Metode 1: Fetch POST text/plain (standar stabil untuk Google Apps Script)
+                fetch(targetUrl, {
                     method: 'POST',
                     mode: 'no-cors',
                     keepalive: true,
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload)
-                }).catch(err => console.warn("Gagal sinkronisasi Sheet:", err));
+                    body: jsonStr
+                }).catch(() => {
+                    // Metode 2 (Fallback): Navigator sendBeacon jika fetch terganggu saat tab ditutup
+                    if (navigator.sendBeacon) {
+                        const blob = new Blob([jsonStr], { type: 'text/plain;charset=utf-8' });
+                        navigator.sendBeacon(targetUrl, blob);
+                    }
+                });
             } catch (e) {
                 console.warn("Error webhook:", e);
             }
         }
 
+        function testSheetConnection() {
+            const targetUrl = (DEFAULT_WEBHOOK_URL && DEFAULT_WEBHOOK_URL.trim() !== "") 
+                ? DEFAULT_WEBHOOK_URL.trim() 
+                : appConfig.webhookUrl;
+            if (!targetUrl) {
+                showModal("URL Kosong", "Silakan masukkan URL Web App Google Apps Script terlebih dahulu pada kolom di sebelah kiri, lalu klik SIMPAN PENGATURAN.", "warning");
+                return;
+            }
+            sendDataToSheet({
+                nama: "Tes Koneksi Perangkat",
+                kelas: "9.1",
+                token: appConfig.token,
+                skor: 100,
+                benar: 30,
+                pelanggaran: 0,
+                logPelanggaran: "Verifikasi koneksi berhasil dari browser",
+                status: "TES KONEKSI"
+            });
+            showModal("Data Tes Dikirim!", "Satu baris data uji coba ('Tes Koneksi Perangkat') baru saja dikirim ke Google Sheet Anda. Silakan cek Google Sheet Anda dalam 3 detik ke depan atau klik tombol 'Tarik Data Sheet'.", "success");
+        }
+
         async function fetchFromSheet(silent = false) {
-            if (!appConfig.webhookUrl) {
+            const targetUrl = (DEFAULT_WEBHOOK_URL && DEFAULT_WEBHOOK_URL.trim() !== "") 
+                ? DEFAULT_WEBHOOK_URL.trim() 
+                : appConfig.webhookUrl;
+            if (!targetUrl) {
                 if (!silent) showModal("URL Belum Diatur", "Masukkan URL Webhook Google Apps Script terlebih dahulu pada form pengaturan di samping.", "warning");
                 return;
             }
             try {
                 if (!silent) showModal("Menyinkronkan...", "Sedang menarik data terbaru dari Google Sheet...", "info");
-                const response = await fetch(appConfig.webhookUrl);
+                const response = await fetch(targetUrl, { cache: 'no-store' });
                 const data = await response.json();
                 if (Array.isArray(data)) {
                     examRecords = data;
